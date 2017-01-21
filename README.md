@@ -11,24 +11,24 @@ Other caveat....
 
 Once programmed and connected to the USB port the Arduino midi controller only shows in the ALSA tab. (see below)
 
-![JackAlsa.png]({{site.baseurl}}/Screenshot/JackAlsa.png)
+![JackAlsa.png](https://github.com/snappy46/GuitarixMidiController/blob/master/Screenshot/JackAlsa.png)
 
 In other to connect with guitarix it need to be available in the MIDI tab.  To make it available in the midi tab you need to run the a2midid bridge program an then the Arduino midi controller will show on the MIDI tab.
 
-![JackMidi.png]({{site.baseurl}}/Screenshot/JackMidi.png)
+![JackMidi.png](https://github.com/snappy46/GuitarixMidiController/blob/master/Screenshot/JackMidi.png)
 
 The easiest way to make sure that it run everytime you start guitarix is to run it when jack (QJackCtl) is run by adding it to Jack options menu as a script to start after jack has started.  (see image below)
 
-![JackSetup.png]({{site.baseurl}}/Screenshot/JackSetup.png)
+![JackSetup.png](https://github.com/snappy46/GuitarixMidiController/blob/master/Screenshot/JackSetup.png)
 
 
 ###Arduino Schematic
 
-![midicontroller_schem.jpg]({{site.baseurl}}/Schematic/midicontroller_schem.jpg)
+![midicontroller_schem.jpg](https://github.com/snappy46/GuitarixMidiController/blob/master/Schematic/midicontroller_schem.jpg)
 
 ###Arduino Board
 
-![midicontroller_bb.jpg]({{site.baseurl}}/Schematic/midicontroller_bb.jpg)
+![midicontroller_bb.jpg](https://github.com/snappy46/GuitarixMidiController/blob/master/Schematic/midicontroller_bb.jpg)
 
 
 Keep on Rocking !!!
