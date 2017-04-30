@@ -10,7 +10,7 @@
 */
 
 #include <MIDIUSB.h>
-#define NUM_SWITCHES  7
+#define NUM_SWITCHES  8
 
 const byte switch1 = 2;
 const byte switch2 = 3;
@@ -19,18 +19,32 @@ const byte switch4 = 5;
 const byte switch5 = 6;
 const byte switch6 = 7;
 const byte switch7 = 8;
+const byte switch8 = 9;
 
-const byte switches[NUM_SWITCHES] = {switch1, switch2, switch3, switch4, switch5, switch6, switch7};
-const byte midiBankLSB[NUM_SWITCHES] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06}; // Bank selection based on switch pressed (switch 1-7)
-const byte midiProgram[NUM_SWITCHES] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06}; // Program/Preset selection based on switch pressed (switch 1-7)
+const byte led1 = A2;
+const byte led2 = A3;
+const byte led3 = A4;
+const byte led4 = A5;
+const byte led5 = 10;
+const byte led6 = 11;
+const byte led7 = 12;
+const byte led8 = 13;
+
+
+const byte switches[NUM_SWITCHES] = {switch1, switch2, switch3, switch4, switch5, switch6, switch7, switch8};
+const byte leds[NUM_SWITCHES] = {led1, led2, led3, led4, led5, led6, led7, led8};
+const byte midiBankLSB[NUM_SWITCHES] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Bank selection based on switch pressed (switch 1-8)
+const byte midiProgram[NUM_SWITCHES] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}; // Program/Preset selection based on switch pressed (switch 1-8)
 
 const byte channel = 0x00;  // use midi channel 1
 
 int previouslyPressedSwitch = -1;
 
 void setup() {
-  for (int i = 0; i < NUM_SWITCHES; i++)
+  for (int i = 0; i < NUM_SWITCHES; i++) {
     pinMode(switches[i], INPUT_PULLUP);
+    pinMode(leds[i], OUTPUT);
+  }
 }
 
 
@@ -71,6 +85,8 @@ void readSwitches()
       controlChange(channel, 0X20, midiBankLSB[i]);  // Bank select LSB
       programChange(channel, midiProgram[i]);  // Program/Preset change
       MidiUSB.flush();
+      digitalWrite(leds[i], HIGH);
+      digitalWrite(leds[previouslyPressedSwitch], LOW);
       previouslyPressedSwitch = i; // store switch that was pressed
     }
   }
