@@ -38,7 +38,17 @@ const byte midiProgram[NUM_SWITCHES] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06
 
 const byte channel = 0x00;  // use midi channel 1
 
+const long loopRecordingLedBlinkInterval = 500; //blink interval of 500 msec or 1/2 sec
+const long switchesDebounceInterval = 500; // switch debouncer interval
+
 int previouslyPressedSwitch = -1;
+int loopRecording = 0;
+int loopPlaying = 0;
+
+int ledState = LOW;
+
+unsigned long previousMillis = 0;  //Store the last time led was updated.
+unsigned long previousBounceMillis = 0;  //Store the last time a switch was activated
 
 void setup() {
   for (int i = 0; i < NUM_SWITCHES; i++) {
@@ -50,6 +60,10 @@ void setup() {
 
 void loop() {
   readSwitches();
+  if (loopRecording == 1) // blinklite if loop is recording
+  {
+    blinkLight();
+  }
 }
 
 // First parameter is the event type (0x0B = control change).
@@ -72,23 +86,89 @@ void programChange(byte channel, byte value) {
 }
 
 // Read all the switches to check if any switch has been pressed.
-// If switch has been pressed then check to see if same as previous one that was pressed.
-// This act as a switch debouncer and avoid trying to set bank/preset that are already set.
+// If switch has been pressed then check to see if same as previous one that was pressed
+// to avoid trying to set bank/preset that are already set. Also check for interval between
+// switch depressed to compensate for switch bouncing.
 
-void readSwitches()
-{
+void readSwitches() {
+  unsigned long currentMillis = millis();
   for (int i = 0; i < NUM_SWITCHES; i++)
   {
-    if (digitalRead(switches[i]) == LOW  && i != previouslyPressedSwitch)
+    if (digitalRead(switches[i]) == LOW && i != previouslyPressedSwitch && currentMillis - previousBounceMillis > switchesDebounceInterval)
     {
-      controlChange(channel, 0X00, 0X00); // Bank select MSB
-      controlChange(channel, 0X20, midiBankLSB[i]);  // Bank select LSB
-      programChange(channel, midiProgram[i]);  // Program/Preset change
-      MidiUSB.flush();
-      digitalWrite(leds[i], HIGH);
-      digitalWrite(leds[previouslyPressedSwitch], LOW);
-      previouslyPressedSwitch = i; // store switch that was pressed
+      previousBounceMillis = currentMillis;
+      if (i == 0) {
+        looperSwitchPressed();
+      }
+      else
+      {
+        presetChangeRequest(i);
+      }
+      
     }
+  }
+}
+
+
+// Method to handle looperSwitch being depress (record, play, stop playing)
+void looperSwitchPressed() {
+   if (loopRecording == 0) {
+          if (loopPlaying == 1) {
+            controlChange(channel, 0X29, 0X00);
+            loopPlaying = 0;
+            digitalWrite(leds[0], LOW);  // extinguish loop lite to indicate no play or recording
+          }
+          else {
+            controlChange(channel, 0X28, 0X40);
+            loopRecording = 1;
+            ledState = 1;
+            //digitalWrite(leds[0], ledState);
+          }
+          MidiUSB.flush();      
+        }
+        else 
+        {
+          controlChange(channel, 0X28, 0X00);
+          controlChange(channel, 0X29, 0X40);
+          MidiUSB.flush();
+          loopRecording = 0;
+          loopPlaying = 1;
+          digitalWrite(leds[0], HIGH);  // illuminate loop lite constantly to indicate loop play.
+        }
+        //delay(500); //small delay to cancel switch bounce 
+}
+
+
+// Method to handle preset change swithches
+void presetChangeRequest(int i) {
+  controlChange(channel, 0X00, 0X00); // Bank select MSB
+  controlChange(channel, 0X20, midiBankLSB[i]);  // Bank select LSB
+  programChange(channel, midiProgram[i]);  // Program/Preset change
+  digitalWrite(leds[i], HIGH);
+  digitalWrite(leds[previouslyPressedSwitch], LOW);
+  previouslyPressedSwitch = i; // store switch that was pressed
+  MidiUSB.flush();
+}
+
+
+//Causes the first led (loop) to continiously blink at a rate define by the interval constant
+void blinkLight()
+{
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis > loopRecordingLedBlinkInterval)
+  {
+    previousMillis =  currentMillis;
+
+    if (ledState == LOW)
+    {
+      ledState = HIGH;
+    }
+    else
+    {
+      ledState = LOW;
+    }
+    digitalWrite(leds[0], ledState);
   }
 }
 
